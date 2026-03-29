@@ -1,6 +1,6 @@
 ## Interface: 120001
 ## Title: Ramm's Runeforge
-## Notes: Lightweight Death Knight runeforge mismatch warning per spec.
+## Notes: Lightweight Death Knight runeforge mismatch warning per spec
 ## Author: Ramm
 ## Version: 1.2.0
 ## SavedVariables: RammsRuneforgeDB
