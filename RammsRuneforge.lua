@@ -7,34 +7,38 @@ local addonName, ns = ...
 
 -- Gate: only load for Death Knights
 local _, playerClass = UnitClass("player")
-if playerClass ~= "DEATHKNIGHT" then return end
+if playerClass ~= "DEATHKNIGHT" then
+	return
+end
 
 -------------------------------------------------------------------------------
 -- Runeforge data (enchant IDs from SpellItemEnchantment)
 -- Verify with  /rrf debug  if Blizzard ever changes these.
 -------------------------------------------------------------------------------
 local RUNEFORGES = {
-    [3368] = "Rune of the Fallen Crusader",
-    [3370] = "Rune of Razorice",
-    [3847] = "Rune of the Stoneskin Gargoyle",
-    [6241] = "Rune of Sanguination",
-    [6242] = "Rune of Spellwarding",
-    [6243] = "Rune of Hysteria",
-    [6244] = "Rune of Unending Thirst",
-    [6245] = "Rune of the Apocalypse",
+	[3368] = "Rune of the Fallen Crusader",
+	[3370] = "Rune of Razorice",
+	[3847] = "Rune of the Stoneskin Gargoyle",
+	[6241] = "Rune of Sanguination",
+	[6242] = "Rune of Spellwarding",
+	[6243] = "Rune of Hysteria",
+	[6244] = "Rune of Unending Thirst",
+	[6245] = "Rune of the Apocalypse",
 }
 
 -- Build sorted list for dropdowns
 local RUNEFORGE_SORTED = {}
 for id, name in pairs(RUNEFORGES) do
-    RUNEFORGE_SORTED[#RUNEFORGE_SORTED + 1] = { id = id, name = name }
+	RUNEFORGE_SORTED[#RUNEFORGE_SORTED + 1] = { id = id, name = name }
 end
-table.sort(RUNEFORGE_SORTED, function(a, b) return a.name < b.name end)
+table.sort(RUNEFORGE_SORTED, function(a, b)
+	return a.name < b.name
+end)
 
 -- Dropdown values: 0 = none, then each runeforge ID
 local DROPDOWN_VALUES = { { text = "None", value = 0 } }
 for _, rf in ipairs(RUNEFORGE_SORTED) do
-    DROPDOWN_VALUES[#DROPDOWN_VALUES + 1] = { text = rf.name, value = rf.id }
+	DROPDOWN_VALUES[#DROPDOWN_VALUES + 1] = { text = rf.name, value = rf.id }
 end
 
 local SPEC_NAMES = { "Blood", "Frost", "Unholy" }
@@ -46,12 +50,16 @@ local db
 local DEFAULT_POSITION = { point = "CENTER", x = 0, y = 200 }
 
 local function EnsureDB()
-    if not RammsRuneforgeDB then
-        RammsRuneforgeDB = {}
-    end
-    db = RammsRuneforgeDB
-    if not db.specs then db.specs = {} end
-    if not db.layouts then db.layouts = {} end
+	if not RammsRuneforgeDB then
+		RammsRuneforgeDB = {}
+	end
+	db = RammsRuneforgeDB
+	if not db.specs then
+		db.specs = {}
+	end
+	if not db.layouts then
+		db.layouts = {}
+	end
 end
 
 -------------------------------------------------------------------------------
@@ -107,9 +115,9 @@ scaleDown:SetOrder(2)
 scaleDown:SetSmoothing("IN")
 
 -- Timed fade-out
-local WARN_DURATION    = 6
-local WARN_COOLDOWN    = 30
-local lastWarnTime     = 0
+local WARN_DURATION = 28
+local WARN_COOLDOWN = 30
+local lastWarnTime = 0
 
 local fadeOut = warnFrame:CreateAnimationGroup()
 local fade = fadeOut:CreateAnimation("Alpha")
@@ -118,64 +126,70 @@ fade:SetToAlpha(0)
 fade:SetDuration(0.6)
 fade:SetStartDelay(WARN_DURATION)
 fadeOut:SetScript("OnFinished", function()
-    ag:Stop()
-    warnFrame:Hide()
-    warnText:SetAlpha(1)
+	ag:Stop()
+	warnFrame:Hide()
+	warnText:SetAlpha(1)
 end)
 
 local function ShowWarning(runeNameWanted)
-    local now = GetTime()
-    if now - lastWarnTime < WARN_COOLDOWN then return end
-    lastWarnTime = now
+	local now = GetTime()
+	if now - lastWarnTime < WARN_COOLDOWN then
+		return
+	end
+	lastWarnTime = now
 
-    local msg = "CHANGE YOUR RUNEFORGE!"
-    if runeNameWanted then
-        msg = "Equip: " .. runeNameWanted .. "!"
-    end
-    warnText:SetText(msg)
-    warnText:SetAlpha(1)
-    warnFrame:Show()
-    ag:Play()
-    fadeOut:Stop()
-    fadeOut:Play()
+	local msg = "CHANGE YOUR RUNEFORGE!"
+	if runeNameWanted then
+		msg = "Equip: " .. runeNameWanted .. "!"
+	end
+	warnText:SetText(msg)
+	warnText:SetAlpha(1)
+	warnFrame:Show()
+	ag:Play()
+	fadeOut:Stop()
+	fadeOut:Play()
 end
 
 local function HideWarning()
-    ag:Stop()
-    fadeOut:Stop()
-    warnFrame:Hide()
+	ag:Stop()
+	fadeOut:Stop()
+	warnFrame:Hide()
 end
 
 -------------------------------------------------------------------------------
 -- Enchant ID helper — reads permanent enchant from item link
 -------------------------------------------------------------------------------
 local function GetPermanentEnchantID(slot)
-    local link = GetInventoryItemLink("player", slot)
-    if not link then return nil end
-    return tonumber(link:match("item:%d+:(%d+)"))
+	local link = GetInventoryItemLink("player", slot)
+	if not link then
+		return nil
+	end
+	return tonumber(link:match("item:%d+:(%d+)"))
 end
 
 -------------------------------------------------------------------------------
 -- Core check
 -------------------------------------------------------------------------------
 local function CheckRuneforge()
-    local specIndex = GetSpecialization()
-    if not specIndex then return end
+	local specIndex = GetSpecialization()
+	if not specIndex then
+		return
+	end
 
-    local wantedID = db.specs[specIndex]
-    if not wantedID or wantedID == 0 then
-        HideWarning()
-        return
-    end
+	local wantedID = db.specs[specIndex]
+	if not wantedID or wantedID == 0 then
+		HideWarning()
+		return
+	end
 
-    local mhID = GetPermanentEnchantID(16) -- main hand
+	local mhID = GetPermanentEnchantID(16) -- main hand
 
-    if mhID and mhID == wantedID then
-        HideWarning()
-        return
-    end
+	if mhID and mhID == wantedID then
+		HideWarning()
+		return
+	end
 
-    ShowWarning(RUNEFORGES[wantedID])
+	ShowWarning(RUNEFORGES[wantedID])
 end
 
 -------------------------------------------------------------------------------
@@ -187,46 +201,48 @@ end
 -- AddFrameSettings(frame, { SettingObject, ... })
 -------------------------------------------------------------------------------
 local function RegisterEditMode()
-    local LEM = LibStub and LibStub("LibEditMode", true)
-    if not LEM then return end
+	local LEM = LibStub and LibStub("LibEditMode", true)
+	if not LEM then
+		return
+	end
 
-    -- Position changed callback (user dragged the frame in edit mode)
-    local function OnPositionChanged(frame, layoutName, point, x, y)
-        db.layouts[layoutName] = { point = point, x = x, y = y }
-    end
+	-- Position changed callback (user dragged the frame in edit mode)
+	local function OnPositionChanged(frame, layoutName, point, x, y)
+		db.layouts[layoutName] = { point = point, x = x, y = y }
+	end
 
-    LEM:AddFrame(mover, OnPositionChanged, DEFAULT_POSITION)
+	LEM:AddFrame(mover, OnPositionChanged, DEFAULT_POSITION)
 
-    -- Restore position when layout changes (also fires at login)
-    LEM:RegisterCallback("layout", function(layoutName)
-        local pos = db.layouts[layoutName]
-        if not pos then
-            pos = CopyTable(DEFAULT_POSITION)
-            db.layouts[layoutName] = pos
-        end
-        mover:ClearAllPoints()
-        mover:SetPoint(pos.point, pos.x, pos.y)
-    end)
+	-- Restore position when layout changes (also fires at login)
+	LEM:RegisterCallback("layout", function(layoutName)
+		local pos = db.layouts[layoutName]
+		if not pos then
+			pos = CopyTable(DEFAULT_POSITION)
+			db.layouts[layoutName] = pos
+		end
+		mover:ClearAllPoints()
+		mover:SetPoint(pos.point, pos.x, pos.y)
+	end)
 
-    -- Settings dropdowns — one per spec, shown in the edit mode dialog
-    local settings = {}
-    for specIdx, specName in ipairs(SPEC_NAMES) do
-        settings[#settings + 1] = {
-            name   = specName .. " Runeforge",
-            kind   = LEM.SettingType.Dropdown,
-            default = 0,
-            get    = function(layoutName)
-                return db.specs[specIdx] or 0
-            end,
-            set    = function(layoutName, value)
-                db.specs[specIdx] = (value ~= 0) and value or nil
-                CheckRuneforge()
-            end,
-            values = DROPDOWN_VALUES,
-        }
-    end
+	-- Settings dropdowns — one per spec, shown in the edit mode dialog
+	local settings = {}
+	for specIdx, specName in ipairs(SPEC_NAMES) do
+		settings[#settings + 1] = {
+			name = specName .. " Runeforge",
+			kind = LEM.SettingType.Dropdown,
+			default = 0,
+			get = function(layoutName)
+				return db.specs[specIdx] or 0
+			end,
+			set = function(layoutName, value)
+				db.specs[specIdx] = (value ~= 0) and value or nil
+				CheckRuneforge()
+			end,
+			values = DROPDOWN_VALUES,
+		}
+	end
 
-    LEM:AddFrameSettings(mover, settings)
+	LEM:AddFrameSettings(mover, settings)
 end
 
 -------------------------------------------------------------------------------
@@ -239,23 +255,20 @@ events:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 events:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 
 events:SetScript("OnEvent", function(_, event, arg1)
-    if event == "ADDON_LOADED" and arg1 == addonName then
-        EnsureDB()
-        RegisterEditMode()
-        events:UnregisterEvent("ADDON_LOADED")
-
-    elseif event == "PLAYER_ENTERING_WORLD" then
-        C_Timer.After(2, CheckRuneforge)
-
-    elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
-        lastWarnTime = 0
-        C_Timer.After(0.5, CheckRuneforge)
-
-    elseif event == "PLAYER_EQUIPMENT_CHANGED" then
-        if arg1 == 16 or arg1 == 17 then
-            C_Timer.After(0.3, CheckRuneforge)
-        end
-    end
+	if event == "ADDON_LOADED" and arg1 == addonName then
+		EnsureDB()
+		RegisterEditMode()
+		events:UnregisterEvent("ADDON_LOADED")
+	elseif event == "PLAYER_ENTERING_WORLD" then
+		C_Timer.After(2, CheckRuneforge)
+	elseif event == "PLAYER_SPECIALIZATION_CHANGED" then
+		lastWarnTime = 0
+		C_Timer.After(0.5, CheckRuneforge)
+	elseif event == "PLAYER_EQUIPMENT_CHANGED" then
+		if arg1 == 16 or arg1 == 17 then
+			C_Timer.After(0.3, CheckRuneforge)
+		end
+	end
 end)
 
 -------------------------------------------------------------------------------
@@ -263,44 +276,45 @@ end)
 -------------------------------------------------------------------------------
 SLASH_RAMMSRUNEFORGE1 = "/rrf"
 SlashCmdList["RAMMSRUNEFORGE"] = function(msg)
-    msg = strtrim(msg):lower()
+	msg = strtrim(msg):lower()
 
-    if msg == "debug" then
-        local mhEnch = GetPermanentEnchantID(16)
-        local ohEnch = GetPermanentEnchantID(17)
-        print("|cff66ccffRamm's Runeforge|r — Debug")
-        print("  Main-hand enchant:", mhEnch or "none")
-        print("  Off-hand enchant:", ohEnch or "none")
-        local spec = GetSpecialization()
-        local wanted = spec and db.specs[spec]
-        print("  Current spec:", spec and SPEC_NAMES[spec] or "unknown")
-        print("  Wanted enchant:", wanted and
-              (RUNEFORGES[wanted] .. " (" .. wanted .. ")") or "none set")
-        return
-    end
+	if msg == "debug" then
+		local mhEnch = GetPermanentEnchantID(16)
+		local ohEnch = GetPermanentEnchantID(17)
+		print("|cff66ccffRamm's Runeforge|r — Debug")
+		print("  Main-hand enchant:", mhEnch or "none")
+		print("  Off-hand enchant:", ohEnch or "none")
+		local spec = GetSpecialization()
+		local wanted = spec and db.specs[spec]
+		print("  Current spec:", spec and SPEC_NAMES[spec] or "unknown")
+		print("  Wanted enchant:", wanted and (RUNEFORGES[wanted] .. " (" .. wanted .. ")") or "none set")
+		return
+	end
 
-    if msg == "check" then
-        lastWarnTime = 0
-        CheckRuneforge()
-        return
-    end
+	if msg == "check" then
+		lastWarnTime = 0
+		CheckRuneforge()
+		return
+	end
 
-    if msg == "reset" then
-        RammsRuneforgeDB = {}
-        EnsureDB()
-        print("|cff66ccffRamm's Runeforge|r — Settings reset. Reload UI to reapply defaults.")
-        return
-    end
+	if msg == "reset" then
+		RammsRuneforgeDB = {}
+		EnsureDB()
+		print("|cff66ccffRamm's Runeforge|r — Settings reset. Reload UI to reapply defaults.")
+		return
+	end
 
-    print("|cff66ccffRamm's Runeforge|r — Select the frame in Edit Mode to configure runeforges.")
-    print("  /rrf debug — show current enchant IDs")
-    print("  /rrf check — force a re-check now")
-    print("  /rrf reset — reset all settings")
+	print("|cff66ccffRamm's Runeforge|r — Select the frame in Edit Mode to configure runeforges.")
+	print("  /rrf debug — show current enchant IDs")
+	print("  /rrf check — force a re-check now")
+	print("  /rrf reset — reset all settings")
 end
 
 -------------------------------------------------------------------------------
 -- Ready message
 -------------------------------------------------------------------------------
 C_Timer.After(3, function()
-    print("|cff66ccffRamm's Runeforge|r loaded — select the frame in Edit Mode to configure, or type |cffffffff/rrf|r for commands.")
+	print(
+		"|cff66ccffRamm's Runeforge|r loaded — select the frame in Edit Mode to configure, or type |cffffffff/rrf|r for commands."
+	)
 end)
