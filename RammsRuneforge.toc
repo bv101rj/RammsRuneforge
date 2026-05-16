@@ -1,8 +1,8 @@
 ## Interface: 120005
 ## Title: Ramm's Runeforge
-## Notes: Lightweight Death Knight runeforge mismatch warning per spec
+## Notes: Never zone in unprepared. DK runeforge mismatch and Rogue poison reminders.
 ## Author: Ramm
-## Version: 1.2.0
+## Version: 2.0.0
 ## SavedVariables: RammsRuneforgeDB
 ## IconTexture: Interface\Icons\Spell_DeathKnight_FrozenRuneWeapon
 ## Dependencies: LibEditMode
