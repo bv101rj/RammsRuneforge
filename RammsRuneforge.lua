@@ -321,10 +321,9 @@ events:SetScript("OnEvent", function(_, event, arg1, ...)
 			C_Timer.After(0.3, Check)
 		end
 	elseif event == "UNIT_AURA" and arg1 == "player" then
-		-- Only re-check if warning is already showing (avoid spam on every buff change)
-		-- or if no poisons are detected yet (initial application)
-		if warnFrame:IsShown() then
-			RunCheck()
+		RunCheck()
+		if warnFrame:IsShown() and not recheckTicker then
+			recheckTicker = C.Timer.NewTicker(2, RunCheck)
 		end
 	end
 end)
