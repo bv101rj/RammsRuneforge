@@ -1,4 +1,4 @@
-## Interface: 120005
+## Interface: 120007
 ## Title: Ramm's Runeforge
 ## Notes: Never zone in unprepared. DK runeforge mismatch and Rogue poison reminders.
 ## Author: Ramm
